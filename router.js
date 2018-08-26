@@ -1,7 +1,9 @@
+const config = require("./config")(process.env.NODE_ENV)
+
 module.exports = {
   "/": (req, res) => {
     res.writeHead(302, {
-      "Location": "/index.html"
+      "Location": `${config.hostname}/index.html`
     })
   }
 }
