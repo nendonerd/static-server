@@ -1,52 +1,61 @@
 const http = require("http");
+const https = require("https");
 const url = require("url");
 const fs = require("fs");
 const path = require("path");
-const port = process.argv[2] || 8002;
+// const port = process.argv[2] || 8002;
+const config = require("./config")(process.env.NODE_ENV);
 
-http
-  .createServer((req, res) => {
-    const parsedUrl = url.parse(req.url);
+const server = (req, res) => {
+  const parsedUrl = url.parse(req.url);
 
-    let pathname = `.${parsedUrl.pathname}`;
+  let pathname = `.${parsedUrl.pathname}`;
 
-    const contentTypes = {
-      ".ico": "image/x-icon",
-      ".html": "text/html",
-      ".js": "text/javascript",
-      ".json": "application/json",
-      ".css": "text/css",
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".wav": "audio/wav",
-      ".mp3": "audio/mpeg",
-      ".svg": "image/svg+xml",
-      ".pdf": "application/pdf",
-      ".doc": "application/msword"
-    };
+  const contentTypes = {
+    ".ico": "image/x-icon",
+    ".html": "text/html",
+    ".js": "text/javascript",
+    ".json": "application/json",
+    ".css": "text/css",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".doc": "application/msword"
+  };
 
-    let isExist = fs.existsSync(pathname);
+  let isExist = fs.existsSync(pathname);
 
-    if (!isExist) {
-      res.statusCode = 404;
-      res.end(`File ${pathname} not found`);
-    } else {
-      fs.readFile(pathname, (err, data) => {
-        if (err) {
-          res.statusCode = 500;
-          res.end(`Error getting the file: ${err}`);
-        } else {
-          let ext = path.parse(pathname).ext;
-          res.setHeader("Content-type", contentTypes[ext] || "text/plain");
-          res.end(data);
-        }
-      });
-    }
-  })
-  .listen(port);
+  if (!isExist) {
+    res.statusCode = 404;
+    res.end(`File ${pathname} not found`);
+  } else {
+    fs.readFile(pathname, (err, data) => {
+      if (err) {
+        res.statusCode = 500;
+        res.end(`Error getting the file: ${err}`);
+      } else {
+        let ext = path.parse(pathname).ext;
+        res.setHeader("Content-type", contentTypes[ext] || "text/plain");
+        res.end(data);
+      }
+    });
+  }
+};
 
-console.log(`server listening at port ${port}`);
+const serverOpts = {
+  cert: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/fullchain.pem"),
+  key: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/privkey.pem")
+};
 
+http.createServer(server).listen(config.httpPort);
+
+https.createServer(serverOpts, server).listen(config.httpsPort);
+
+console.log(`http server listening at port ${config.httpPort}`);
+console.log(`https server listening at port ${config.httpsPort}`);
 
 // setting CORS headers
 /*
