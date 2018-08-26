@@ -8,8 +8,7 @@ module.exports = env => {
       break;
     default:
       return {
-        httpPort: 8004,
-        httpsPort: 8005
+        httpPort: 8004
       }
   }
 }

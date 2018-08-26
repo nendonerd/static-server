@@ -3,13 +3,23 @@ const https = require("https");
 const url = require("url");
 const fs = require("fs");
 const path = require("path");
+const router = require("./router");
 // const port = process.argv[2] || 8002;
 const config = require("./config")(process.env.NODE_ENV);
+
+const routing = (pathname, req, res) => {
+  if (router[pathname]) {
+    router[pathname](req, res);
+    return true;
+  } else {
+    return false;
+  }
+};
 
 const server = (req, res) => {
   const parsedUrl = url.parse(req.url);
 
-  let pathname = `.${parsedUrl.pathname}`;
+  let pathname = parsedUrl.pathname;
 
   const contentTypes = {
     ".ico": "image/x-icon",
@@ -26,18 +36,19 @@ const server = (req, res) => {
     ".doc": "application/msword"
   };
 
-  let isExist = fs.existsSync(pathname);
+  let isExist = fs.existsSync(`.${pathname}`);
 
-  if (!isExist) {
+  if (!routing(pathname, req, res) && !isExist) {
     res.statusCode = 404;
     res.end(`File ${pathname} not found`);
   } else {
-    fs.readFile(pathname, (err, data) => {
+    console.log(pathname)
+    fs.readFile(`.${pathname}`, (err, data) => {
       if (err) {
         res.statusCode = 500;
         res.end(`Error getting the file: ${err}`);
       } else {
-        let ext = path.parse(pathname).ext;
+        let ext = path.parse(`.${pathname}`).ext;
         res.setHeader("Content-type", contentTypes[ext] || "text/plain");
         res.end(data);
       }
@@ -45,18 +56,22 @@ const server = (req, res) => {
   }
 };
 
-const serverOpts = {
-  cert: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/fullchain.pem"),
-  key: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/privkey.pem")
-};
 
 http.createServer(server).listen(config.httpPort);
 
-https.createServer(serverOpts, server).listen(config.httpsPort);
-
 console.log(`http server listening at port ${config.httpPort}`);
-console.log(`https server listening at port ${config.httpsPort}`);
 
+
+if (config.httpsPort) {
+  const serverOpts = {
+    cert: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/fullchain.pem"),
+    key: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/privkey.pem")
+  };
+
+  https.createServer(serverOpts, server).listen(config.httpsPort);
+
+  console.log(`https server listening at port ${config.httpsPort}`);
+}
 // setting CORS headers
 /*
   // Website you wish to allow to connect
