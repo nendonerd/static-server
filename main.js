@@ -39,10 +39,12 @@ const server = (req, res) => {
   let isExist = fs.existsSync(`.${pathname}`);
 
   if (!routing(pathname, req, res) && !isExist) {
+
     res.statusCode = 404;
     res.end(`File ${pathname} not found`);
+
   } else {
-    console.log(pathname)
+
     fs.readFile(`.${pathname}`, (err, data) => {
       if (err) {
         res.statusCode = 500;
@@ -53,6 +55,7 @@ const server = (req, res) => {
         res.end(data);
       }
     });
+
   }
 };
 
@@ -63,6 +66,7 @@ console.log(`http server listening at port ${config.httpPort}`);
 
 
 if (config.httpsPort) {
+
   const serverOpts = {
     cert: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/fullchain.pem"),
     key: fs.readFileSync("/etc/letsencrypt/live/nendo.ml/privkey.pem")
@@ -72,6 +76,13 @@ if (config.httpsPort) {
 
   console.log(`https server listening at port ${config.httpsPort}`);
 }
+
+// to-do list:
+// 1. copy cert into project folder
+// 2. foward all http request to https
+// 3. add an exit command
+
+
 // setting CORS headers
 /*
   // Website you wish to allow to connect
