@@ -10,3 +10,6 @@
       cert: fs.readFileSync('/etc/letsencrypt/live/${hostname}/fullchain.pem'),
       key: fs.readFileSync('/etc/letsencrypt/live/${hostname}/privkey.pem')
     };
+
+4. renew the cert // 2018.11.24
+   >certbot renew

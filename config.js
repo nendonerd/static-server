@@ -2,16 +2,22 @@ module.exports = env => {
   switch(env) {
     case "production":
       return {
+        envName: 'production',
+        isHttps: true,
         hostname: "https://nendo.ml",
         httpPort: 80,
         httpsPort: 443,
+        pid: ''
 
       }
       break;
     default:
       return {
-        hostname: "http://localhost:8004",
-        httpPort: 8004
+        envName: 'dev',
+        isHttps: false,
+        hostname: "http://localhost:8005",
+        httpPort: 8005,
+        pid: ''
       }
   }
 }
